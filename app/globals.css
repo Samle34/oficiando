@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens — Oficios ─────────────────────────────────────────── */
+@theme {
+  /* Brand */
+  --color-brand:        #e8622a;
+  --color-brand-hover:  #d4541f;
+
+  /* Surfaces — base warm off-white, elevated pure white */
+  --color-surface:      #f8f7f4;
+  --color-card:         #ffffff;
+
+  /* Foreground hierarchy — primary → secondary → tertiary */
+  --color-primary:      #1a1a1a;
+  --color-secondary:    #888888;
+  --color-tertiary:     #aaaaaa;
+
+  /* Border — warm gray, barely there */
+  --color-border:       #f0ede8;
+  --color-border-hover: rgba(232,98,42,0.20);
+
+  /* WhatsApp */
+  --color-whatsapp:       #22c55e;
+  --color-whatsapp-hover: #16a34a;
+
+  /* Category accent colors (left-border signature + tag bg) */
+  --color-cat-plumbing: #d97706;  /* amber */
+  --color-cat-electric: #2563eb;  /* blue */
+  --color-cat-cleaning: #059669;  /* emerald */
+  --color-cat-masonry:  #7c3aed;  /* violet */
+  --color-cat-painting: #e11d48;  /* rose */
+  --color-cat-garden:   #16a34a;  /* green */
+  --color-cat-moving:   #ea580c;  /* orange */
+  --color-cat-other:    #6b7280;  /* gray */
+
+  /* Typography */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --text-xs:      11px;
+  --text-sm:      13px;
+  --text-base:    15px;
+  --text-lg:      17px;
+  --text-xl:      19px;
+  --text-2xl:     24px;
+  --text-3xl:     30px;
+  --text-4xl:     38px;
+
+  /* Border radius */
+  --radius-sm:    6px;
+  --radius-md:    12px;
+  --radius-lg:    14px;
+  --radius-xl:    20px;
+  --radius-full:  9999px;
+}
+
+/* ─── Base ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
