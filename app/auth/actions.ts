@@ -68,6 +68,9 @@ export async function registerWithProfile(data: {
     if (msg.includes("already registered") || msg.includes("user already registered")) {
       return { status: "error", message: "Este email ya está registrado. Iniciá sesión." };
     }
+    if (error.status === 429 || msg.includes("rate limit")) {
+      return { status: "error", message: "Demasiados intentos. Esperá unos minutos y volvé a intentar." };
+    }
     return { status: "error", message: "No se pudo crear la cuenta. Intentá de nuevo." };
   }
 
