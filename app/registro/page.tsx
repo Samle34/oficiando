@@ -77,7 +77,7 @@ export default function RegistroPage() {
       });
       if (result.status === "error") {
         setError(result.message);
-      } else if (result.needsEmailConfirm) {
+      } else if (result.status === "success" && result.needsEmailConfirm) {
         setSent(true);
       } else {
         router.refresh();
