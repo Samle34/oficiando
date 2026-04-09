@@ -20,13 +20,20 @@ export async function GET(request: Request) {
 
       if (pending) {
         try {
-          const profile = JSON.parse(pending.value) as { full_name: string; phone: string };
+          const profile = JSON.parse(pending.value) as {
+            full_name: string;
+            phone: string;
+            nationality?: string;
+            province?: string;
+          };
           const { data: { user } } = await supabase.auth.getUser();
           if (user && profile.full_name) {
             await supabase.from("profiles").upsert({
               id: user.id,
               full_name: profile.full_name,
               phone: profile.phone,
+              nationality: profile.nationality ?? null,
+              province: profile.province ?? null,
             });
           }
         } catch {

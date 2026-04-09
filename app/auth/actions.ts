@@ -40,12 +40,20 @@ export async function registerWithProfile(data: {
   email: string;
   full_name: string;
   phone: string;
+  nationality: string;
+  province: string;
 }): Promise<AuthState> {
   if (!data.full_name?.trim()) {
     return { status: "error", message: "El nombre es obligatorio." };
   }
   if (!data.phone?.trim()) {
     return { status: "error", message: "El teléfono es obligatorio." };
+  }
+  if (!data.nationality?.trim()) {
+    return { status: "error", message: "La nacionalidad es obligatoria." };
+  }
+  if (!data.province?.trim()) {
+    return { status: "error", message: "La provincia es obligatoria." };
   }
 
   // Store profile data in a short-lived cookie — picked up by the auth callback
@@ -54,6 +62,8 @@ export async function registerWithProfile(data: {
   cookieStore.set("pending_profile", JSON.stringify({
     full_name: data.full_name.trim(),
     phone: data.phone.trim(),
+    nationality: data.nationality.trim(),
+    province: data.province.trim(),
   }), { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 600, path: "/" });
 
   return sendMagicLink(data.email);
