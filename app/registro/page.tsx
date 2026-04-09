@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import PhoneInput, { type PhoneValue } from "@/components/ui/PhoneInput";
@@ -35,8 +36,11 @@ const inputClass = [
 ].join(" ");
 
 export default function RegistroPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
+    password: "",
+    confirmPassword: "",
     full_name: "",
     nationality: "Argentina",
     province: "",
@@ -54,27 +58,38 @@ export default function RegistroPage() {
 
   function handleSubmit() {
     setError(null);
+
+    if (form.password !== form.confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
     const fullPhone = `${phone.prefix} ${phone.number}`.trim();
-    const province = form.province;
 
     startTransition(async () => {
       const result = await registerWithProfile({
         email: form.email,
+        password: form.password,
         full_name: form.full_name,
         phone: fullPhone,
         nationality: form.nationality,
-        province,
+        province: form.province,
       });
       if (result.status === "error") {
         setError(result.message);
-      } else {
+      } else if (result.needsEmailConfirm) {
         setSent(true);
+      } else {
+        router.refresh();
+        router.push("/");
       }
     });
   }
 
   const canSubmit =
     form.email.trim() &&
+    form.password &&
+    form.confirmPassword &&
     form.full_name.trim() &&
     phone.number.trim() &&
     form.nationality &&
@@ -87,23 +102,16 @@ export default function RegistroPage() {
           <div className="flex flex-col items-center gap-5 text-center pt-8">
             <span className="text-5xl">📬</span>
             <div className="flex flex-col gap-2">
-              <h2 className="text-xl font-bold text-primary">Revisá tu email</h2>
+              <h2 className="text-xl font-bold text-primary">Confirmá tu email</h2>
               <p className="text-sm text-secondary leading-relaxed max-w-xs">
-                Te mandamos un link a{" "}
+                Te mandamos un link de confirmación a{" "}
                 <span className="font-semibold text-primary">{form.email}</span>.
-                Tocalo para activar tu cuenta.
+                Tocalo para activar tu cuenta y luego iniciá sesión.
               </p>
             </div>
-            <button
-              onClick={() => {
-                setSent(false);
-                setForm({ email: "", full_name: "", nationality: "Argentina", province: "" });
-                setPhone({ prefix: "+54", number: "" });
-              }}
-              className="text-sm text-brand font-medium"
-            >
-              Usar otro email
-            </button>
+            <Link href="/login" className="text-sm text-brand font-medium">
+              Ir a iniciar sesión
+            </Link>
           </div>
         </main>
     );
@@ -204,9 +212,41 @@ export default function RegistroPage() {
               type="email"
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder="nombre@ejemplo.com"
               autoComplete="email"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Contraseña */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="password" className="text-sm font-semibold text-primary">
+              Contraseña
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={form.password}
+              onChange={(e) => set("password", e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              autoComplete="new-password"
+              className={inputClass}
+            />
+          </div>
+
+          {/* Confirmar contraseña */}
+          <div className="flex flex-col gap-2">
+            <label htmlFor="confirmPassword" className="text-sm font-semibold text-primary">
+              Repetir contraseña
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              value={form.confirmPassword}
+              onChange={(e) => set("confirmPassword", e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="Repetí tu contraseña"
+              autoComplete="new-password"
               className={inputClass}
             />
           </div>
