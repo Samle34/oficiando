@@ -41,6 +41,7 @@ export async function registerWithProfile(data: {
   phone: string;
   nationality: string;
   province: string;
+  role: "client" | "worker";
 }): Promise<RegisterState> {
   if (!data.full_name?.trim())
     return { status: "error", message: "El nombre es obligatorio." };
@@ -52,6 +53,8 @@ export async function registerWithProfile(data: {
     return { status: "error", message: "La provincia es obligatoria." };
   if (!data.password || data.password.length < 6)
     return { status: "error", message: "La contraseña debe tener al menos 6 caracteres." };
+  if (data.role !== "client" && data.role !== "worker")
+    return { status: "error", message: "Rol inválido." };
 
   const supabase = await createServerSupabaseClient();
   const headersList = await headers();
@@ -85,6 +88,7 @@ export async function registerWithProfile(data: {
     phone: data.phone.trim(),
     nationality: data.nationality.trim(),
     province: data.province.trim(),
+    role: data.role,
   };
 
   if (authData.session && authData.user) {
@@ -111,17 +115,52 @@ export async function signOut(): Promise<void> {
 }
 
 export async function updateProfile(data: {
-  full_name: string;
-  phone: string;
+  full_name?: string;
+  phone?: string;
+  avatar_url?: string;
+  role?: "client" | "worker";
 }): Promise<{ error?: string }> {
   const supabase = await createServerSupabaseClient();
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return { error: "No autenticado." };
 
-  const { error } = await supabase
+  const patch: Record<string, unknown> = { id: user.id };
+  if (data.full_name !== undefined) patch.full_name = data.full_name.trim();
+  if (data.phone !== undefined) patch.phone = data.phone.trim();
+  if (data.avatar_url !== undefined) patch.avatar_url = data.avatar_url;
+  if (data.role !== undefined) patch.role = data.role;
+
+  const { error } = await supabase.from("profiles").upsert(patch);
+  if (error) return { error: "No se pudo guardar el perfil." };
+  return {};
+}
+
+export async function updateWorkerProfile(data: {
+  bio: string;
+  categories: string[];
+  work_zones: string[];
+}): Promise<{ error?: string }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return { error: "No autenticado." };
+
+  // Verify role in DB — don't trust client-side state
+  const { data: profile } = await supabase
     .from("profiles")
-    .upsert({ id: user.id, full_name: data.full_name.trim(), phone: data.phone.trim() });
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "worker") return { error: "Solo los trabajadores pueden editar este perfil." };
+
+  const { error } = await supabase.from("profiles").upsert({
+    id: user.id,
+    bio: data.bio.trim() || null,
+    categories: data.categories,
+    work_zones: data.work_zones,
+  });
 
   if (error) return { error: "No se pudo guardar el perfil." };
   return {};

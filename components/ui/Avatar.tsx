@@ -23,6 +23,7 @@ function initials(name: string) {
 
 interface AvatarProps {
   name: string;
+  avatarUrl?: string | null;
   size?: "sm" | "md" | "lg";
 }
 
@@ -32,7 +33,19 @@ const sizes = {
   lg: "w-12 h-12 text-base",
 };
 
-export default function Avatar({ name, size = "md" }: AvatarProps) {
+export default function Avatar({ name, avatarUrl, size = "md" }: AvatarProps) {
+  if (avatarUrl) {
+    return (
+      <span
+        className={["inline-block rounded-full overflow-hidden shrink-0", sizes[size]].join(" ")}
+        aria-label={name}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={avatarUrl} alt={name} className="w-full h-full object-cover" />
+      </span>
+    );
+  }
+
   const palette = getPalette(name);
 
   return (

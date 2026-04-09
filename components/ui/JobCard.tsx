@@ -28,6 +28,17 @@ export default function JobCard({ job }: { job: Job }) {
       ].join(" ")}
       style={{ borderLeftColor: cat.color }}
     >
+      {job.photos?.[0] && (
+        <div className="w-full h-32 rounded-md overflow-hidden -mx-0 mb-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={job.photos[0]}
+            alt={job.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
       <p className="text-base font-semibold text-primary leading-snug group-hover:text-brand transition-colors">
         {job.title}
       </p>

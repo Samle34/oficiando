@@ -34,6 +34,7 @@ export async function GET(request: Request) {
           phone: string;
           nationality?: string;
           province?: string;
+          role?: "client" | "worker";
         };
         const { data: { user } } = await supabase.auth.getUser();
         if (user && profile.full_name) {
@@ -43,6 +44,7 @@ export async function GET(request: Request) {
             phone: profile.phone,
             nationality: profile.nationality ?? null,
             province: profile.province ?? null,
+            role: profile.role ?? "client",
           });
         }
       } catch {

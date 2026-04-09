@@ -1,9 +1,23 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import Avatar from "@/components/ui/Avatar";
 
 export default async function Header() {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  let avatarUrl: string | null = null;
+  let fullName = "";
+
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, avatar_url")
+      .eq("id", user.id)
+      .single();
+    avatarUrl = profile?.avatar_url ?? null;
+    fullName = profile?.full_name ?? user.email ?? "U";
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-card border-b border-border">
@@ -18,17 +32,11 @@ export default async function Header() {
         </Link>
 
         {user ? (
-          <Link
-            href="/perfil"
-            className="w-8 h-8 rounded-full bg-brand flex items-center justify-center text-white text-xs font-bold"
-          >
-            {(user.email?.[0] ?? "U").toUpperCase()}
+          <Link href="/perfil" aria-label="Mi perfil">
+            <Avatar name={fullName} avatarUrl={avatarUrl} size="sm" />
           </Link>
         ) : (
-          <Link
-            href="/login"
-            className="text-sm font-semibold text-brand"
-          >
+          <Link href="/login" className="text-sm font-semibold text-brand">
             Ingresar
           </Link>
         )}

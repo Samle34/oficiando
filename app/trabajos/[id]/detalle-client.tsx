@@ -57,6 +57,17 @@ export default function DetalleClient({ job }: { job: Job }) {
             <span className="text-sm text-tertiary">{relativeTime(job.posted_at)}</span>
           </div>
 
+          {job.photos?.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
+              {job.photos.map((url, i) => (
+                <div key={i} className="w-32 h-24 shrink-0 rounded-md overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt={`Foto ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+
           {isClosed && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-red-50 border border-red-100">
               <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />

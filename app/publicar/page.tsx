@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from "react";
 import Button from "@/components/ui/Button";
+import PhotoUpload from "@/components/ui/PhotoUpload";
 import { CATEGORIES, type CategoryId } from "@/lib/categories";
 import { publicarTrabajo } from "@/app/actions";
+import { createBrowserSupabaseClient } from "@/lib/supabase";
 
-type Step = "categoria" | "detalle" | "exito";
+type Step = "categoria" | "detalle" | "fotos" | "exito";
 
 export default function PublicarPage() {
   const [step, setStep] = useState<Step>("categoria");
@@ -14,6 +16,8 @@ export default function PublicarPage() {
   const [descripcion, setDescripcion] = useState("");
   const [provincia, setProvincia] = useState("");
   const [ciudad, setCiudad] = useState("");
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -23,7 +27,19 @@ export default function PublicarPage() {
 
   const canSubmit = titulo.trim() && provincia.trim() && ciudad.trim();
 
-  function handlePublicar() {
+  async function goToFotos() {
+    if (!canSubmit || !categoryId) return;
+    // Fetch userId for storage path (lazy)
+    if (!userId) {
+      const supabase = createBrowserSupabaseClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) setUserId(user.id);
+    }
+    setError(null);
+    setStep("fotos");
+  }
+
+  function handlePublicar(photosToSave: string[]) {
     if (!canSubmit || !categoryId) return;
     setError(null);
 
@@ -34,10 +50,12 @@ export default function PublicarPage() {
         category_id: categoryId,
         province: provincia,
         city: ciudad,
+        photos: photosToSave,
       });
 
       if (result.status === "error") {
         setError(result.message);
+        setStep("detalle");
       } else {
         setStep("exito");
       }
@@ -50,6 +68,7 @@ export default function PublicarPage() {
     setDescripcion("");
     setProvincia("");
     setCiudad("");
+    setPhotos([]);
     setError(null);
     setStep("categoria");
   }
@@ -66,12 +85,11 @@ export default function PublicarPage() {
     <>
       <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-32 pt-6 flex flex-col gap-6">
 
+        {/* ── Paso 1: Categoría ─── */}
         {step === "categoria" && (
           <>
             <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-primary">
-                ¿Qué tipo de trabajo es?
-              </h1>
+              <h1 className="text-xl font-bold text-primary">¿Qué tipo de trabajo es?</h1>
               <p className="text-sm text-secondary">Elegí la categoría</p>
             </div>
 
@@ -91,18 +109,15 @@ export default function PublicarPage() {
                   ].join(" ")}
                   style={{ borderLeftWidth: "3px", borderLeftColor: cat.color }}
                 >
-                  <span className="text-2xl" aria-hidden="true">
-                    {cat.icon}
-                  </span>
-                  <span className="text-sm font-semibold text-primary">
-                    {cat.label}
-                  </span>
+                  <span className="text-2xl" aria-hidden="true">{cat.icon}</span>
+                  <span className="text-sm font-semibold text-primary">{cat.label}</span>
                 </button>
               ))}
             </div>
           </>
         )}
 
+        {/* ── Paso 2: Detalle ─── */}
         {step === "detalle" && selectedCat && (
           <>
             <div className="flex flex-col gap-1">
@@ -114,9 +129,7 @@ export default function PublicarPage() {
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">{selectedCat.icon}</span>
-                <h1 className="text-xl font-bold text-primary">
-                  {selectedCat.label}
-                </h1>
+                <h1 className="text-xl font-bold text-primary">{selectedCat.label}</h1>
               </div>
               <p className="text-sm text-secondary">Contanos qué necesitás</p>
             </div>
@@ -160,14 +173,10 @@ export default function PublicarPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold text-primary">
-                  ¿Dónde es el trabajo?
-                </span>
+                <span className="text-sm font-semibold text-primary">¿Dónde es el trabajo?</span>
                 <div className="flex gap-3">
                   <div className="flex flex-col gap-1 flex-1">
-                    <label htmlFor="provincia" className="text-xs text-secondary">
-                      Provincia
-                    </label>
+                    <label htmlFor="provincia" className="text-xs text-secondary">Provincia</label>
                     <input
                       id="provincia"
                       type="text"
@@ -178,9 +187,7 @@ export default function PublicarPage() {
                     />
                   </div>
                   <div className="flex flex-col gap-1 flex-1">
-                    <label htmlFor="ciudad" className="text-xs text-secondary">
-                      Ciudad / Localidad
-                    </label>
+                    <label htmlFor="ciudad" className="text-xs text-secondary">Ciudad / Localidad</label>
                     <input
                       id="ciudad"
                       type="text"
@@ -193,23 +200,69 @@ export default function PublicarPage() {
                 </div>
               </div>
 
-              {error && (
-                <p className="text-sm text-red-600 font-medium">{error}</p>
-              )}
+              {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
             </div>
           </>
         )}
 
+        {/* ── Paso 3: Fotos (opcional) ─── */}
+        {step === "fotos" && (
+          <>
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={() => setStep("detalle")}
+                className="text-sm text-brand font-medium mb-1 text-left w-fit"
+              >
+                ← Volver
+              </button>
+              <h1 className="text-xl font-bold text-primary">¿Tenés fotos del trabajo?</h1>
+              <p className="text-sm text-secondary leading-relaxed">
+                Agregar fotos ayuda a los trabajadores a entender mejor qué necesitás. Es opcional.
+              </p>
+            </div>
+
+            {userId ? (
+              <PhotoUpload
+                bucket="job-photos"
+                pathPrefix={`${userId}/pending/`}
+                maxPhotos={3}
+                onPhotosChange={setPhotos}
+              />
+            ) : (
+              <p className="text-sm text-tertiary">
+                Iniciá sesión para subir fotos.
+              </p>
+            )}
+
+            <div className="flex flex-col gap-3 pt-2">
+              <Button
+                variant="brand"
+                fullWidth
+                disabled={isPending}
+                onClick={() => handlePublicar(photos)}
+              >
+                {isPending ? "Publicando..." : photos.length > 0 ? "Publicar con fotos" : "Publicar sin fotos"}
+              </Button>
+              <Button
+                variant="outline"
+                fullWidth
+                disabled={isPending}
+                onClick={() => handlePublicar([])}
+              >
+                Omitir fotos
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* ── Paso 4: Éxito ─── */}
         {step === "exito" && (
           <div className="flex flex-col items-center gap-6 text-center py-10">
             <span className="text-5xl">✅</span>
             <div className="flex flex-col gap-2">
-              <h1 className="text-xl font-bold text-primary">
-                ¡Trabajo publicado!
-              </h1>
+              <h1 className="text-xl font-bold text-primary">¡Trabajo publicado!</h1>
               <p className="text-sm text-secondary leading-relaxed max-w-xs">
-                Los trabajadores de tu zona van a poder ver tu publicación y
-                contactarte.
+                Los trabajadores de tu zona van a poder ver tu publicación y contactarte.
               </p>
             </div>
             <Button variant="outline" onClick={resetForm}>
@@ -226,14 +279,13 @@ export default function PublicarPage() {
               variant="brand"
               fullWidth
               disabled={!canSubmit || isPending}
-              onClick={handlePublicar}
+              onClick={goToFotos}
             >
-              {isPending ? "Publicando..." : "Publicar trabajo gratis"}
+              Continuar
             </Button>
           </div>
         </div>
       )}
-
     </>
   );
 }

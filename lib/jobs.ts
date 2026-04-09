@@ -15,11 +15,12 @@ export interface Job {
   user_id: string | null;
   posted_at: string;
   updated_at: string;
+  photos: string[];
 }
 
 // Columns returned in list views — omits client_phone for privacy
 const LIST_COLUMNS =
-  "id, title, category_id, province, city, status, applicants, posted_at" as const;
+  "id, title, category_id, province, city, status, applicants, posted_at, photos" as const;
 
 // All columns for the detail view
 const DETAIL_COLUMNS = "*" as const;
@@ -91,6 +92,7 @@ export interface CreateJobInput {
   category_id: string;
   province: string;
   city: string;
+  photos?: string[];
   // Populated from auth profile — nullable for anonymous posts
   client_name?: string;
   client_phone?: string;
@@ -112,6 +114,7 @@ export async function createJob(input: CreateJobInput): Promise<Job> {
       category_id: input.category_id,
       province: input.province.trim(),
       city: input.city.trim(),
+      photos: input.photos ?? [],
       client_name: input.client_name?.trim() || null,
       client_phone: input.client_phone?.trim() || null,
       user_id: input.user_id ?? null,

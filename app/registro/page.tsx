@@ -35,8 +35,12 @@ const inputClass = [
   "transition-colors duration-150",
 ].join(" ");
 
+type RegistroStep = "rol" | "datos";
+
 export default function RegistroPage() {
   const router = useRouter();
+  const [step, setStep] = useState<RegistroStep>("rol");
+  const [role, setRole] = useState<"client" | "worker">("client");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -74,6 +78,7 @@ export default function RegistroPage() {
         phone: fullPhone,
         nationality: form.nationality,
         province: form.province,
+        role,
       });
       if (result.status === "error") {
         setError(result.message);
@@ -95,6 +100,59 @@ export default function RegistroPage() {
     form.nationality &&
     form.province.trim() &&
     !isPending;
+
+  if (step === "rol") {
+    return (
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+        <div className="flex flex-col gap-2">
+          <Link href="/login" className="text-sm text-brand font-medium self-start">
+            ← Volver
+          </Link>
+          <h1 className="text-2xl font-black text-primary">¿Qué vas a hacer en Oficiando?</h1>
+          <p className="text-sm text-secondary leading-relaxed">
+            Elegí tu rol principal. Podés cambiarlo después desde tu perfil.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          {[
+            {
+              value: "client" as const,
+              icon: "🔍",
+              label: "Busco trabajadores",
+              desc: "Publicás trabajos y recibís postulaciones de profesionales.",
+            },
+            {
+              value: "worker" as const,
+              icon: "🔧",
+              label: "Ofrezco servicios",
+              desc: "Ves los trabajos disponibles y contactás a los clientes.",
+            },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                setRole(opt.value);
+                setStep("datos");
+              }}
+              className={[
+                "flex items-start gap-4 p-5 rounded-xl border-2 text-left",
+                "transition-colors duration-150 active:scale-[0.98]",
+                "border-border hover:border-brand bg-card",
+              ].join(" ")}
+            >
+              <span className="text-3xl leading-none">{opt.icon}</span>
+              <div className="flex flex-col gap-1">
+                <p className="text-base font-bold text-primary">{opt.label}</p>
+                <p className="text-sm text-secondary leading-relaxed">{opt.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </main>
+    );
+  }
 
   if (sent) {
     return (
@@ -120,9 +178,13 @@ export default function RegistroPage() {
   return (
     <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
-          <Link href="/login" className="text-sm text-brand font-medium self-start">
+          <button
+            type="button"
+            onClick={() => setStep("rol")}
+            className="text-sm text-brand font-medium self-start"
+          >
             ← Volver
-          </Link>
+          </button>
           <h1 className="text-2xl font-black text-primary">Crear cuenta</h1>
           <p className="text-sm text-secondary leading-relaxed">
             Creá tu cuenta gratis para publicar trabajos y gestionar tus proyectos.
