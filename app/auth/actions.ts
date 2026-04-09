@@ -68,8 +68,14 @@ export async function registerWithProfile(data: {
     if (msg.includes("already registered") || msg.includes("user already registered")) {
       return { status: "error", message: "Este email ya está registrado. Iniciá sesión." };
     }
-    if (error.status === 429 || msg.includes("rate limit")) {
+    if (error.status === 429 || msg.includes("rate limit") || msg.includes("email rate limit")) {
       return { status: "error", message: "Demasiados intentos. Esperá unos minutos y volvé a intentar." };
+    }
+    if (msg.includes("invalid email") || msg.includes("unable to validate email")) {
+      return { status: "error", message: "El email ingresado no es válido." };
+    }
+    if (msg.includes("smtp") || msg.includes("sending")) {
+      return { status: "error", message: "Error al enviar el email de confirmación. Intentá de nuevo." };
     }
     return { status: "error", message: "No se pudo crear la cuenta. Intentá de nuevo." };
   }
