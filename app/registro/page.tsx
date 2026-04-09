@@ -5,6 +5,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import PhoneInput, { type PhoneValue } from "@/components/ui/PhoneInput";
 import { registerWithProfile } from "@/app/auth/actions";
+import { PROVINCES_BY_COUNTRY } from "@/lib/provinces";
 
 const COUNTRIES = [
   "Argentina", "Uruguay", "Brasil", "Chile", "Paraguay", "Bolivia",
@@ -14,14 +15,6 @@ const COUNTRIES = [
   "Francia", "Italia", "Portugal", "China", "Japón", "Corea del Sur",
   "India", "Australia", "Sudáfrica", "Nigeria", "Marruecos", "Rusia",
   "Otro",
-];
-
-const AR_PROVINCES = [
-  "Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba",
-  "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja",
-  "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan",
-  "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero",
-  "Tierra del Fuego", "Tucumán",
 ];
 
 const selectClass = [
@@ -47,14 +40,13 @@ export default function RegistroPage() {
     full_name: "",
     nationality: "Argentina",
     province: "",
-    provinceText: "",
   });
   const [phone, setPhone] = useState<PhoneValue>({ prefix: "+54", number: "" });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const isArgentina = form.nationality === "Argentina";
+  const provinceList = PROVINCES_BY_COUNTRY[form.nationality] ?? null;
 
   function set(field: string, val: string) {
     setForm((prev) => ({ ...prev, [field]: val }));
@@ -63,7 +55,7 @@ export default function RegistroPage() {
   function handleSubmit() {
     setError(null);
     const fullPhone = `${phone.prefix} ${phone.number}`.trim();
-    const province = isArgentina ? form.province : form.provinceText;
+    const province = form.province;
 
     startTransition(async () => {
       const result = await registerWithProfile({
@@ -86,7 +78,7 @@ export default function RegistroPage() {
     form.full_name.trim() &&
     phone.number.trim() &&
     form.nationality &&
-    (isArgentina ? form.province : form.provinceText).trim() &&
+    form.province.trim() &&
     !isPending;
 
   if (sent) {
@@ -105,7 +97,7 @@ export default function RegistroPage() {
             <button
               onClick={() => {
                 setSent(false);
-                setForm({ email: "", full_name: "", nationality: "Argentina", province: "", provinceText: "" });
+                setForm({ email: "", full_name: "", nationality: "Argentina", province: "" });
                 setPhone({ prefix: "+54", number: "" });
               }}
               className="text-sm text-brand font-medium"
@@ -163,7 +155,6 @@ export default function RegistroPage() {
               onChange={(e) => {
                 set("nationality", e.target.value);
                 set("province", "");
-                set("provinceText", "");
               }}
               className={selectClass}
             >
@@ -174,20 +165,20 @@ export default function RegistroPage() {
             </select>
           </div>
 
-          {/* Provincia */}
+          {/* Provincia / Estado */}
           <div className="flex flex-col gap-2">
             <label htmlFor="province" className="text-sm font-semibold text-primary">
-              {isArgentina ? "Provincia" : "Provincia / Estado"}
+              Provincia / Estado
             </label>
-            {isArgentina ? (
+            {provinceList ? (
               <select
                 id="province"
                 value={form.province}
                 onChange={(e) => set("province", e.target.value)}
                 className={selectClass}
               >
-                <option value="" disabled>Seleccioná tu provincia</option>
-                {AR_PROVINCES.map((p) => (
+                <option value="" disabled>Seleccioná tu provincia / estado</option>
+                {provinceList.map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
@@ -195,9 +186,9 @@ export default function RegistroPage() {
               <input
                 id="province"
                 type="text"
-                value={form.provinceText}
-                onChange={(e) => set("provinceText", e.target.value)}
-                placeholder="Ej: São Paulo"
+                value={form.province}
+                onChange={(e) => set("province", e.target.value)}
+                placeholder="Ingresá tu provincia o estado"
                 className={inputClass}
               />
             )}
