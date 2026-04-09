@@ -7,7 +7,7 @@ import { CATEGORIES, type CategoryId } from "@/lib/categories";
 import { publicarTrabajo } from "@/app/actions";
 import { createBrowserSupabaseClient } from "@/lib/supabase";
 
-type Step = "categoria" | "detalle" | "fotos" | "exito";
+type Step = "categoria" | "detalle" | "exito";
 
 export default function PublicarPage() {
   const [step, setStep] = useState<Step>("categoria");
@@ -27,19 +27,18 @@ export default function PublicarPage() {
 
   const canSubmit = titulo.trim() && provincia.trim() && ciudad.trim();
 
-  async function goToFotos() {
-    if (!canSubmit || !categoryId) return;
-    // Fetch userId for storage path (lazy)
+  async function goToDetalle(catId: CategoryId) {
+    setCategoryId(catId);
+    // Fetch userId for storage path (lazy, once)
     if (!userId) {
       const supabase = createBrowserSupabaseClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) setUserId(user.id);
     }
-    setError(null);
-    setStep("fotos");
+    setStep("detalle");
   }
 
-  function handlePublicar(photosToSave: string[]) {
+  function handlePublicar() {
     if (!canSubmit || !categoryId) return;
     setError(null);
 
@@ -50,12 +49,11 @@ export default function PublicarPage() {
         category_id: categoryId,
         province: provincia,
         city: ciudad,
-        photos: photosToSave,
+        photos,
       });
 
       if (result.status === "error") {
         setError(result.message);
-        setStep("detalle");
       } else {
         setStep("exito");
       }
@@ -97,10 +95,7 @@ export default function PublicarPage() {
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => {
-                    setCategoryId(cat.id);
-                    setStep("detalle");
-                  }}
+                  onClick={() => goToDetalle(cat.id)}
                   className={[
                     "flex items-center gap-3 rounded-lg border px-4 py-4",
                     "text-left transition-all duration-150",
@@ -200,62 +195,32 @@ export default function PublicarPage() {
                 </div>
               </div>
 
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-semibold text-primary">
+                  Fotos{" "}
+                  <span className="text-tertiary font-normal">(opcional)</span>
+                </span>
+                <p className="text-xs text-secondary">
+                  Agregar fotos ayuda a los trabajadores a entender mejor qué necesitás.
+                </p>
+                {userId ? (
+                  <PhotoUpload
+                    bucket="job-photos"
+                    pathPrefix={`${userId}/pending/`}
+                    maxPhotos={3}
+                    onPhotosChange={setPhotos}
+                  />
+                ) : (
+                  <p className="text-xs text-tertiary">Iniciá sesión para subir fotos.</p>
+                )}
+              </div>
+
               {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
             </div>
           </>
         )}
 
-        {/* ── Paso 3: Fotos (opcional) ─── */}
-        {step === "fotos" && (
-          <>
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => setStep("detalle")}
-                className="text-sm text-brand font-medium mb-1 text-left w-fit"
-              >
-                ← Volver
-              </button>
-              <h1 className="text-xl font-bold text-primary">¿Tenés fotos del trabajo?</h1>
-              <p className="text-sm text-secondary leading-relaxed">
-                Agregar fotos ayuda a los trabajadores a entender mejor qué necesitás. Es opcional.
-              </p>
-            </div>
-
-            {userId ? (
-              <PhotoUpload
-                bucket="job-photos"
-                pathPrefix={`${userId}/pending/`}
-                maxPhotos={3}
-                onPhotosChange={setPhotos}
-              />
-            ) : (
-              <p className="text-sm text-tertiary">
-                Iniciá sesión para subir fotos.
-              </p>
-            )}
-
-            <div className="flex flex-col gap-3 pt-2">
-              <Button
-                variant="brand"
-                fullWidth
-                disabled={isPending}
-                onClick={() => handlePublicar(photos)}
-              >
-                {isPending ? "Publicando..." : photos.length > 0 ? "Publicar con fotos" : "Publicar sin fotos"}
-              </Button>
-              <Button
-                variant="outline"
-                fullWidth
-                disabled={isPending}
-                onClick={() => handlePublicar([])}
-              >
-                Omitir fotos
-              </Button>
-            </div>
-          </>
-        )}
-
-        {/* ── Paso 4: Éxito ─── */}
+        {/* ── Paso 3: Éxito ─── */}
         {step === "exito" && (
           <div className="flex flex-col items-center gap-6 text-center py-10">
             <span className="text-5xl">✅</span>
@@ -279,9 +244,9 @@ export default function PublicarPage() {
               variant="brand"
               fullWidth
               disabled={!canSubmit || isPending}
-              onClick={goToFotos}
+              onClick={handlePublicar}
             >
-              Continuar
+              {isPending ? "Publicando..." : "Publicar trabajo gratis"}
             </Button>
           </div>
         </div>
