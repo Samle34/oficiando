@@ -36,6 +36,29 @@ export async function sendMagicLink(email: string): Promise<AuthState> {
   return { status: "success", email: email.trim().toLowerCase() };
 }
 
+export async function registerWithProfile(data: {
+  email: string;
+  full_name: string;
+  phone: string;
+}): Promise<AuthState> {
+  if (!data.full_name?.trim()) {
+    return { status: "error", message: "El nombre es obligatorio." };
+  }
+  if (!data.phone?.trim()) {
+    return { status: "error", message: "El teléfono es obligatorio." };
+  }
+
+  // Store profile data in a short-lived cookie — picked up by the auth callback
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  cookieStore.set("pending_profile", JSON.stringify({
+    full_name: data.full_name.trim(),
+    phone: data.phone.trim(),
+  }), { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 600, path: "/" });
+
+  return sendMagicLink(data.email);
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();

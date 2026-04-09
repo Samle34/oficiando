@@ -11,7 +11,30 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createServerSupabaseClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+
     if (!error) {
+      // If a pending profile was stored during registration, save it now
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const pending = cookieStore.get("pending_profile");
+
+      if (pending) {
+        try {
+          const profile = JSON.parse(pending.value) as { full_name: string; phone: string };
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && profile.full_name) {
+            await supabase.from("profiles").upsert({
+              id: user.id,
+              full_name: profile.full_name,
+              phone: profile.phone,
+            });
+          }
+        } catch {
+          // Malformed cookie — ignore, user can fill profile manually
+        }
+        cookieStore.delete("pending_profile");
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
