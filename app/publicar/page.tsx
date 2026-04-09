@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import Button from "@/components/ui/Button";
 import { CATEGORIES, type CategoryId } from "@/lib/categories";
 import { publicarTrabajo } from "@/app/actions";
@@ -66,8 +64,6 @@ export default function PublicarPage() {
 
   return (
     <>
-      <Header />
-
       <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-32 pt-6 flex flex-col gap-6">
 
         {step === "categoria" && (
@@ -238,7 +234,6 @@ export default function PublicarPage() {
         </div>
       )}
 
-      <BottomNav />
     </>
   );
 }

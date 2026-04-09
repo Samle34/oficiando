@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import Button from "@/components/ui/Button";
 import PhoneInput, { type PhoneValue } from "@/components/ui/PhoneInput";
 import { registerWithProfile } from "@/app/auth/actions";
@@ -93,9 +91,7 @@ export default function RegistroPage() {
 
   if (sent) {
     return (
-      <>
-        <Header />
-        <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
           <div className="flex flex-col items-center gap-5 text-center pt-8">
             <span className="text-5xl">📬</span>
             <div className="flex flex-col gap-2">
@@ -118,15 +114,11 @@ export default function RegistroPage() {
             </button>
           </div>
         </main>
-        <BottomNav />
-      </>
     );
   }
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+    <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <Link href="/login" className="text-sm text-brand font-medium self-start">
             ← Volver
@@ -245,8 +237,6 @@ export default function RegistroPage() {
         <p className="text-xs text-tertiary text-center leading-relaxed">
           Al crear tu cuenta aceptás los términos de uso de Oficiando.
         </p>
-      </main>
-      <BottomNav />
-    </>
+    </main>
   );
 }

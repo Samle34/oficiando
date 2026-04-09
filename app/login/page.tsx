@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import Button from "@/components/ui/Button";
 import { sendMagicLink } from "@/app/auth/actions";
 
@@ -30,9 +28,7 @@ export default function LoginPage() {
 
   if (sent) {
     return (
-      <>
-        <Header />
-        <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
           <div className="flex flex-col items-center gap-5 text-center pt-8">
             <span className="text-5xl">📬</span>
             <div className="flex flex-col gap-2">
@@ -51,16 +47,12 @@ export default function LoginPage() {
             </button>
           </div>
         </main>
-        <BottomNav />
-      </>
     );
   }
 
   if (mode === "choose") {
     return (
-      <>
-        <Header />
-        <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <h1 className="text-2xl font-black text-primary">Bienvenido</h1>
             <p className="text-sm text-secondary leading-relaxed">
@@ -79,15 +71,11 @@ export default function LoginPage() {
             </Button>
           </div>
         </main>
-        <BottomNav />
-      </>
     );
   }
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
+    <main className="flex-1 max-w-lg mx-auto w-full px-4 pt-12 pb-24 flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <button
             onClick={() => setMode("choose")}
@@ -141,8 +129,6 @@ export default function LoginPage() {
         <p className="text-xs text-tertiary text-center leading-relaxed">
           Al ingresar aceptás los términos de uso de Oficiando.
         </p>
-      </main>
-      <BottomNav />
-    </>
+    </main>
   );
 }

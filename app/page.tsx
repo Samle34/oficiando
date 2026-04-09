@@ -1,15 +1,10 @@
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import Button from "@/components/ui/Button";
 import { CATEGORIES } from "@/lib/categories";
 
 export default function HomePage() {
   return (
-    <>
-      <Header />
-
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-28 pt-8 flex flex-col gap-10">
+    <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-28 pt-8 flex flex-col gap-10">
 
         {/* ── Hero ────────────────────────────────────────────── */}
         <section className="flex flex-col gap-5">
@@ -113,9 +108,6 @@ export default function HomePage() {
           </p>
         </section>
 
-      </main>
-
-      <BottomNav />
-    </>
+    </main>
   );
 }

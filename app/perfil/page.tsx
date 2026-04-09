@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import PerfilClient from "./perfil-client";
 
@@ -25,14 +23,10 @@ export default async function PerfilPage() {
     .single();
 
   return (
-    <>
-      <Header />
-      <PerfilClient
-        email={user.email ?? ""}
-        fullName={profile?.full_name ?? ""}
-        phone={profile?.phone ?? ""}
-      />
-      <BottomNav />
-    </>
+    <PerfilClient
+      email={user.email ?? ""}
+      fullName={profile?.full_name ?? ""}
+      phone={profile?.phone ?? ""}
+    />
   );
 }

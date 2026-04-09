@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import JobCard from "@/components/ui/JobCard";
 import { JobCardSkeleton } from "@/components/ui/Skeleton";
 import { CATEGORIES } from "@/lib/categories";
@@ -31,10 +29,7 @@ export default function TrabajosClient({
   }, [jobs, search, activeCategory]);
 
   return (
-    <>
-      <Header />
-
-      <main className="flex-1 max-w-lg mx-auto w-full pb-24">
+    <main className="flex-1 max-w-lg mx-auto w-full pb-24">
 
         <div className="sticky top-14 z-30 bg-surface px-4 pt-4 pb-3 flex flex-col gap-3 border-b border-border">
           <input
@@ -100,9 +95,6 @@ export default function TrabajosClient({
             filtered.map((job) => <JobCard key={job.id} job={job} />)
           )}
         </div>
-      </main>
-
-      <BottomNav />
-    </>
+    </main>
   );
 }

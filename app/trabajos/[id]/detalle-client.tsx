@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import Button from "@/components/ui/Button";
 import CategoryTag from "@/components/ui/CategoryTag";
 import Avatar from "@/components/ui/Avatar";
@@ -36,8 +34,6 @@ export default function DetalleClient({ job }: { job: Job }) {
 
   return (
     <>
-      <Header />
-
       <main className={[
         "flex-1 max-w-lg mx-auto w-full px-4 pt-6 flex flex-col gap-6",
         isClosed ? "pb-8" : "pb-36",
@@ -143,7 +139,6 @@ export default function DetalleClient({ job }: { job: Job }) {
         </div>
       )}
 
-      <BottomNav />
     </>
   );
 }

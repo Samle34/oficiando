@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import JobCard from "@/components/ui/JobCard";
 import CloseJobButton from "@/components/ui/CloseJobButton";
 import { createServerSupabaseClient } from "@/lib/supabase";
@@ -30,9 +28,7 @@ export default async function MisProyectosPage() {
   const cerrados = allJobs.filter((j) => j.status === "cerrado");
 
   return (
-    <>
-      <Header />
-      <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-24 pt-8 flex flex-col gap-8">
+    <main className="flex-1 max-w-lg mx-auto w-full px-4 pb-24 pt-8 flex flex-col gap-8">
 
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-primary">Mis proyectos</h1>
@@ -80,8 +76,6 @@ export default async function MisProyectosPage() {
             </Link>
           </div>
         )}
-      </main>
-      <BottomNav />
-    </>
+    </main>
   );
 }
