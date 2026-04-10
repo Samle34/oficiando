@@ -109,6 +109,38 @@ export async function registerWithProfile(data: {
   }
 }
 
+export async function requestPasswordReset(
+  email: string
+): Promise<{ error?: string }> {
+  if (!email?.trim()) return { error: "Ingresá tu email." };
+
+  const supabase = await createServerSupabaseClient();
+  const headersList = await headers();
+  const origin = headersList.get("origin") ?? "";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    email.trim().toLowerCase(),
+    { redirectTo: `${origin}/auth/callback?next=/nueva-contrasena` }
+  );
+
+  if (error) return { error: "No se pudo enviar el email. Verificá que sea correcto." };
+  return {};
+}
+
+export async function updatePassword(
+  password: string
+): Promise<{ error?: string }> {
+  if (!password || password.length < 6) {
+    return { error: "La contraseña debe tener al menos 6 caracteres." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) return { error: "No se pudo actualizar la contraseña. El enlace puede haber expirado." };
+  return {};
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createServerSupabaseClient();
   await supabase.auth.signOut();

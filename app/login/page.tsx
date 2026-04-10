@@ -117,6 +117,13 @@ export default function LoginPage() {
           >
             {isPending ? "Ingresando..." : "Ingresar"}
           </Button>
+
+          <Link
+            href="/recuperar-contrasena"
+            className="text-xs text-tertiary text-center hover:text-secondary transition-colors"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
         </div>
 
         <p className="text-xs text-tertiary text-center leading-relaxed">
