@@ -61,6 +61,10 @@ export default function PerfilClient({
   function handleSave() {
     setError(null);
     setSaved(false);
+    if (!phone.trim()) {
+      setError("El número de WhatsApp es obligatorio.");
+      return;
+    }
     startSave(async () => {
       const result = await updateProfile({ full_name: fullName, phone });
       if (result.error) {

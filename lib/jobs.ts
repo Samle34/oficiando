@@ -43,6 +43,8 @@ export async function getJobs({
     .from("jobs")
     .select(LIST_COLUMNS)
     .eq("status", "abierto")
+    .not("client_phone", "is", null)
+    .neq("client_phone", "")
     .order("posted_at", { ascending: false });
 
   if (category) {

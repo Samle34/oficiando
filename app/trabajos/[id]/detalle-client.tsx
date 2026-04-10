@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import CategoryTag from "@/components/ui/CategoryTag";
 import Avatar from "@/components/ui/Avatar";
 import { getCategory } from "@/lib/categories";
+import { applyToJob } from "@/app/actions";
 import type { Job } from "@/lib/jobs";
 
 function relativeTime(iso: string): string {
@@ -18,19 +19,37 @@ function relativeTime(iso: string): string {
   return `hace ${Math.floor(hrs / 24)} d`;
 }
 
-export default function DetalleClient({ job }: { job: Job }) {
+interface Props {
+  job: Job;
+  isWorker: boolean;
+  hasApplied: boolean;
+}
+
+export default function DetalleClient({ job, isWorker, hasApplied: initialHasApplied }: Props) {
   const defaultMsg = job.client_name
     ? `Hola ${job.client_name.split(" ")[0]}, vi tu publicación en Oficiando sobre "${job.title}". ¿Seguís buscando a alguien?`
     : `Hola, vi tu publicación en Oficiando sobre "${job.title}". ¿Seguís buscando a alguien?`;
 
   const [mensaje, setMensaje] = useState(defaultMsg);
-  const [aplicado, setAplicado] = useState(false);
+  const [aplicado, setAplicado] = useState(initialHasApplied);
+  const [isPending, startTransition] = useTransition();
 
   const cat = getCategory(job.category_id);
   const waUrl = job.client_phone
     ? `https://wa.me/54${job.client_phone}?text=${encodeURIComponent(mensaje)}`
     : null;
   const isClosed = job.status === "cerrado";
+
+  function handleApply() {
+    if (isWorker) {
+      startTransition(async () => {
+        await applyToJob(job.id);
+        setAplicado(true);
+      });
+    } else {
+      setAplicado(true);
+    }
+  }
 
   return (
     <>
@@ -132,8 +151,8 @@ export default function DetalleClient({ job }: { job: Job }) {
         <div className="fixed bottom-16 inset-x-0 px-4 pb-4 pt-3 bg-gradient-to-t from-surface to-transparent">
           <div className="max-w-lg mx-auto">
             {!aplicado ? (
-              <Button variant="brand" fullWidth onClick={() => setAplicado(true)}>
-                Quiero este trabajo
+              <Button variant="brand" fullWidth disabled={isPending} onClick={handleApply}>
+                {isPending ? "Guardando..." : "Quiero este trabajo"}
               </Button>
             ) : waUrl ? (
               <a href={waUrl} target="_blank" rel="noopener noreferrer" className="block">
@@ -141,15 +160,18 @@ export default function DetalleClient({ job }: { job: Job }) {
                   <span>💬</span> Hablar por WhatsApp
                 </Button>
               </a>
+            ) : isWorker ? (
+              <Button variant="outline" fullWidth disabled>
+                El cliente no agregó su número de WhatsApp
+              </Button>
             ) : (
               <Button variant="whatsapp" fullWidth disabled>
-                Contacto disponible al iniciar sesión
+                Iniciá sesión para ver el contacto
               </Button>
             )}
           </div>
         </div>
       )}
-
     </>
   );
 }

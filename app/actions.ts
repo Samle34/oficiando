@@ -40,6 +40,13 @@ export async function publicarTrabajo(
         .single();
       client_name = profile?.full_name ?? undefined;
       client_phone = profile?.phone ?? undefined;
+
+      if (!client_phone?.trim()) {
+        return {
+          status: "error",
+          message: "Completá tu número de teléfono en el perfil antes de publicar, así los trabajadores pueden contactarte.",
+        };
+      }
     }
 
     const job = await createJob({ ...input, client_name, client_phone, user_id } as CreateJobInput);
@@ -217,4 +224,37 @@ export async function deletePortfolioItem(
 
   if (error) return { error: "No se pudo eliminar el item." };
   return {};
+}
+
+// ─── Applications ─────────────────────────────────────────────────
+
+export type ApplyState =
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+export async function applyToJob(jobId: number): Promise<ApplyState> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { status: "error", message: "Debés iniciar sesión." };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "worker") {
+    return { status: "error", message: "Solo los trabajadores pueden postularse." };
+  }
+
+  const { error } = await supabase
+    .from("applications")
+    .upsert({ job_id: jobId, worker_id: user.id });
+
+  if (error) return { status: "error", message: "No se pudo guardar la postulación." };
+
+  revalidatePath(`/trabajos/${jobId}`);
+  revalidatePath("/mis-trabajos");
+
+  return { status: "success" };
 }

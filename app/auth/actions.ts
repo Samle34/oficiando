@@ -125,6 +125,10 @@ export async function updateProfile(data: {
   const { data: { user }, error: userError } = await supabase.auth.getUser();
   if (userError || !user) return { error: "No autenticado." };
 
+  if (data.phone !== undefined && !data.phone.trim()) {
+    return { error: "El número de WhatsApp es obligatorio." };
+  }
+
   const patch: Record<string, unknown> = { id: user.id };
   if (data.full_name !== undefined) patch.full_name = data.full_name.trim();
   if (data.phone !== undefined) patch.phone = data.phone.trim();

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,15 +39,28 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let role: "client" | "worker" | null = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    role = (profile?.role as "client" | "worker") ?? null;
+  }
+
   return (
     <html lang="es" className={inter.variable}>
       <body className="min-h-svh flex flex-col bg-surface antialiased">
         <Header />
         {children}
-        <BottomNav />
+        <BottomNav role={role} />
       </body>
     </html>
   );
