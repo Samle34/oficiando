@@ -23,9 +23,10 @@ interface Props {
   job: Job;
   isWorker: boolean;
   hasApplied: boolean;
+  isOwner: boolean;
 }
 
-export default function DetalleClient({ job, isWorker, hasApplied: initialHasApplied }: Props) {
+export default function DetalleClient({ job, isWorker, hasApplied: initialHasApplied, isOwner }: Props) {
   const defaultMsg = job.client_name
     ? `Hola ${job.client_name.split(" ")[0]}, vi tu publicación en Oficiando sobre "${job.title}". ¿Seguís buscando a alguien?`
     : `Hola, vi tu publicación en Oficiando sobre "${job.title}". ¿Seguís buscando a alguien?`;
@@ -55,7 +56,7 @@ export default function DetalleClient({ job, isWorker, hasApplied: initialHasApp
     <>
       <main className={[
         "flex-1 max-w-lg mx-auto w-full px-4 pt-6 flex flex-col gap-6",
-        isClosed ? "pb-8" : "pb-36",
+        !isClosed && !isOwner ? "pb-36" : "pb-8",
       ].join(" ")}>
 
         <Link href="/trabajos" className="text-sm text-brand font-medium w-fit">
@@ -113,7 +114,13 @@ export default function DetalleClient({ job, isWorker, hasApplied: initialHasApp
           )}
         </div>
 
-        {!isClosed && (
+        {!isClosed && isOwner && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-orange-50 border border-orange-100">
+            <span className="text-sm font-semibold text-brand">Esta es tu publicación</span>
+          </div>
+        )}
+
+        {!isClosed && isWorker && (
           !aplicado ? (
             <div className="flex flex-col gap-2">
               <label htmlFor="mensaje" className="text-sm font-semibold text-primary">
@@ -147,7 +154,7 @@ export default function DetalleClient({ job, isWorker, hasApplied: initialHasApp
         )}
       </main>
 
-      {!isClosed && (
+      {!isClosed && isWorker && (
         <div className="fixed bottom-16 inset-x-0 px-4 pb-4 pt-3 bg-gradient-to-t from-surface to-transparent">
           <div className="max-w-lg mx-auto">
             {!aplicado ? (
@@ -160,15 +167,21 @@ export default function DetalleClient({ job, isWorker, hasApplied: initialHasApp
                   <span>💬</span> Hablar por WhatsApp
                 </Button>
               </a>
-            ) : isWorker ? (
+            ) : (
               <Button variant="outline" fullWidth disabled>
                 El cliente no agregó su número de WhatsApp
               </Button>
-            ) : (
-              <Button variant="whatsapp" fullWidth disabled>
-                Iniciá sesión para ver el contacto
-              </Button>
             )}
+          </div>
+        </div>
+      )}
+
+      {!isClosed && !isWorker && !isOwner && (
+        <div className="fixed bottom-16 inset-x-0 px-4 pb-4 pt-3 bg-gradient-to-t from-surface to-transparent">
+          <div className="max-w-lg mx-auto">
+            <Button variant="whatsapp" fullWidth disabled>
+              Iniciá sesión como trabajador para postularte
+            </Button>
           </div>
         </div>
       )}

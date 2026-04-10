@@ -26,8 +26,9 @@ export default async function TrabajoDetallePage({ params }: Props) {
 
   let isWorker = false;
   let hasApplied = false;
+  const isOwner = !!user && job.user_id === user.id;
 
-  if (user) {
+  if (user && !isOwner) {
     const [profileResult, applicationResult] = await Promise.all([
       supabase.from("profiles").select("role").eq("id", user.id).single(),
       supabase.from("applications").select("id").eq("job_id", job.id).eq("worker_id", user.id).maybeSingle(),
@@ -36,5 +37,5 @@ export default async function TrabajoDetallePage({ params }: Props) {
     hasApplied = !!applicationResult.data;
   }
 
-  return <DetalleClient job={job} isWorker={isWorker} hasApplied={hasApplied} />;
+  return <DetalleClient job={job} isWorker={isWorker} hasApplied={hasApplied} isOwner={isOwner} />;
 }
