@@ -58,34 +58,34 @@ export default async function TrabajoDetallePage({ params }: Props) {
   }
 
   if (isOwner) {
-    const { data } = await supabase
+    const { data: apps } = await supabase
       .from("applications")
-      .select(`
-        worker_id, status, message,
-        profiles ( full_name, avatar_url, categories, rating )
-      `)
+      .select("worker_id, status, message")
       .eq("job_id", job.id)
       .order("created_at", { ascending: true });
 
-    applicants = ((data ?? []) as unknown as {
-      worker_id: string;
-      status: string;
-      message: string | null;
-      profiles: {
-        full_name: string;
-        avatar_url: string | null;
-        categories: string[] | null;
-        rating: number | null;
-      } | null;
-    }[]).map((r) => ({
-      worker_id: r.worker_id,
-      status: r.status,
-      message: r.message,
-      full_name: r.profiles?.full_name ?? "Trabajador",
-      avatar_url: r.profiles?.avatar_url ?? null,
-      categories: r.profiles?.categories ?? [],
-      rating: r.profiles?.rating ?? null,
-    }));
+    if (apps && apps.length > 0) {
+      const workerIds = apps.map((a) => a.worker_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, categories, rating")
+        .in("id", workerIds);
+
+      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+
+      applicants = apps.map((a) => {
+        const p = profileMap.get(a.worker_id);
+        return {
+          worker_id: a.worker_id,
+          status: a.status,
+          message: a.message,
+          full_name: p?.full_name ?? "Trabajador",
+          avatar_url: p?.avatar_url ?? null,
+          categories: p?.categories ?? [],
+          rating: p?.rating ?? null,
+        };
+      });
+    }
   }
 
   return (
