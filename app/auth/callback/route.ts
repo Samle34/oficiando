@@ -22,6 +22,11 @@ export async function GET(request: Request) {
   }
 
   if (!sessionError) {
+    // Recovery links must go to the change-password page, not home
+    if (type === "recovery") {
+      return NextResponse.redirect(`${origin}/nueva-contrasena`);
+    }
+
     // If a pending profile was stored during registration, save it now
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
