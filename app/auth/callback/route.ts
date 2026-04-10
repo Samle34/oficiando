@@ -22,11 +22,6 @@ export async function GET(request: Request) {
   }
 
   if (!sessionError) {
-    // Password recovery — send directly to the new password page
-    if (type === "recovery") {
-      return NextResponse.redirect(`${origin}/nueva-contrasena`);
-    }
-
     // If a pending profile was stored during registration, save it now
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();

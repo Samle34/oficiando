@@ -120,7 +120,7 @@ export async function requestPasswordReset(
 
   const { error } = await supabase.auth.resetPasswordForEmail(
     email.trim().toLowerCase(),
-    { redirectTo: `${origin}/auth/callback?next=/nueva-contrasena` }
+    { redirectTo: `${origin}/auth/recovery` }
   );
 
   if (error) return { error: "No se pudo enviar el email. Verificá que sea correcto." };
