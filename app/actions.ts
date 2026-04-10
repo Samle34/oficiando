@@ -232,7 +232,7 @@ export type ApplyState =
   | { status: "success" }
   | { status: "error"; message: string };
 
-export async function applyToJob(jobId: number): Promise<ApplyState> {
+export async function applyToJob(jobId: number, message?: string): Promise<ApplyState> {
   const supabase = await createServerSupabaseClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Debés iniciar sesión." };
@@ -249,9 +249,42 @@ export async function applyToJob(jobId: number): Promise<ApplyState> {
 
   const { error } = await supabase
     .from("applications")
-    .upsert({ job_id: jobId, worker_id: user.id });
+    .upsert({ job_id: jobId, worker_id: user.id, message: message?.trim() || null, status: "pending" });
 
   if (error) return { status: "error", message: "No se pudo guardar la postulación." };
+
+  revalidatePath(`/trabajos/${jobId}`);
+  revalidatePath("/mis-trabajos");
+
+  return { status: "success" };
+}
+
+export type AcceptApplicationState =
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+export async function acceptApplication(jobId: number, workerId: string): Promise<AcceptApplicationState> {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { status: "error", message: "No autenticado." };
+
+  // Verify the job belongs to this user
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("id")
+    .eq("id", jobId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!job) return { status: "error", message: "No autorizado." };
+
+  const { error } = await supabase
+    .from("applications")
+    .update({ status: "accepted" })
+    .eq("job_id", jobId)
+    .eq("worker_id", workerId);
+
+  if (error) return { status: "error", message: "No se pudo aceptar la postulación." };
 
   revalidatePath(`/trabajos/${jobId}`);
   revalidatePath("/mis-trabajos");

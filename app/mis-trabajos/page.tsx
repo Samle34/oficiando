@@ -16,7 +16,6 @@ export default async function MisTrabajosPage() {
 
   if (!user) redirect("/login");
 
-  // Verify worker role
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -25,20 +24,24 @@ export default async function MisTrabajosPage() {
 
   if (profile?.role !== "worker") redirect("/");
 
-  // Fetch applications with job data
   const { data: applications } = await supabase
     .from("applications")
     .select(`
-      created_at,
+      created_at, status, message,
       jobs (
         id, title, category_id, province, city, status,
-        applicants, posted_at, photos
+        applicants, posted_at, photos, client_phone, client_name
       )
     `)
     .eq("worker_id", user.id)
     .order("created_at", { ascending: false });
 
-  type AppRow = { created_at: string; jobs: Partial<Job> | null };
+  type AppRow = {
+    created_at: string;
+    status: string;
+    message: string | null;
+    jobs: Partial<Job> | null;
+  };
   const rows = (applications ?? []) as AppRow[];
 
   const activos = rows.filter((r) => r.jobs?.status === "abierto");
@@ -56,11 +59,23 @@ export default async function MisTrabajosPage() {
       posted_at: row.jobs!.posted_at!,
       photos: row.jobs!.photos ?? [],
       description: null,
-      client_name: null,
-      client_phone: null,
+      client_name: row.jobs!.client_name ?? null,
+      client_phone: row.jobs!.client_phone ?? null,
       user_id: null,
       updated_at: row.created_at,
     };
+  }
+
+  function waUrl(row: AppRow): string | null {
+    const phone = row.jobs?.client_phone;
+    if (!phone) return null;
+    const jobTitle = row.jobs?.title ?? "";
+    const clientName = row.jobs?.client_name ?? "";
+    const defaultMsg = clientName
+      ? `Hola ${clientName.split(" ")[0]}, vi tu publicación en Oficiando sobre "${jobTitle}". ¿Seguís buscando a alguien?`
+      : `Hola, vi tu publicación en Oficiando sobre "${jobTitle}". ¿Seguís buscando a alguien?`;
+    const msg = row.message ?? defaultMsg;
+    return `https://wa.me/54${phone}?text=${encodeURIComponent(msg)}`;
   }
 
   return (
@@ -78,13 +93,45 @@ export default async function MisTrabajosPage() {
           <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide">
             Activos
           </h2>
-          {activos.map((row) => (
-            row.jobs && (
-              <Link key={row.jobs.id} href={`/trabajos/${row.jobs.id}`}>
-                <JobCard job={toJob(row)} />
-              </Link>
-            )
-          ))}
+          {activos.map((row) =>
+            row.jobs ? (
+              <div key={row.jobs.id} className="flex flex-col gap-2">
+                <Link href={`/trabajos/${row.jobs.id}`}>
+                  <JobCard job={toJob(row)} />
+                </Link>
+
+                {/* Badge de estado */}
+                <div className="flex items-center justify-between px-1">
+                  {row.status === "accepted" ? (
+                    <span className="text-xs font-semibold text-green-600 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                      Aceptado ✓
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-secondary flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block" />
+                      Pendiente
+                    </span>
+                  )}
+                </div>
+
+                {/* Botón Contactar solo si fue aceptado */}
+                {row.status === "accepted" && (
+                  waUrl(row) ? (
+                    <a href={waUrl(row)!} target="_blank" rel="noopener noreferrer" className="block">
+                      <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md bg-[#22c55e] text-white text-sm font-semibold">
+                        <span>💬</span> Contactar por WhatsApp
+                      </button>
+                    </a>
+                  ) : (
+                    <p className="text-xs text-tertiary text-center">
+                      El cliente no agregó su número de WhatsApp
+                    </p>
+                  )
+                )}
+              </div>
+            ) : null
+          )}
         </section>
       )}
 
@@ -93,11 +140,11 @@ export default async function MisTrabajosPage() {
           <h2 className="text-sm font-semibold text-secondary uppercase tracking-wide">
             Terminados
           </h2>
-          {terminados.map((row) => (
-            row.jobs && (
+          {terminados.map((row) =>
+            row.jobs ? (
               <JobCard key={row.jobs.id} job={toJob(row)} />
-            )
-          ))}
+            ) : null
+          )}
         </section>
       )}
 
