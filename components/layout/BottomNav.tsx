@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 type Role = "client" | "worker" | null;
 
 const CLIENT_NAV = [
-  { href: "/", label: "Inicio", icon: "🏠" },
+  { href: "/", label: "Inicio", icon: "🏠", highlight: false },
+  { href: "/trabajos", label: "Trabajos", icon: "📋", highlight: false },
   { href: "/publicar", label: "Publicar", icon: "➕", highlight: true },
-  { href: "/mis-proyectos", label: "Proyectos", icon: "📁" },
-  { href: "/perfil", label: "Mi perfil", icon: "👤" },
+  { href: "/mis-proyectos", label: "Proyectos", icon: "📁", highlight: false },
+  { href: "/perfil", label: "Mi perfil", icon: "👤", highlight: false },
 ];
 
 const WORKER_NAV = [

@@ -159,16 +159,23 @@ export default async function HomePage() {
             Publicá tu trabajo, recibí postulaciones y cerrá el trato directo
             por WhatsApp. Sin comisiones, sin intermediarios.
           </p>
-          <Button variant="brand" fullWidth>
-            <Link href="/publicar" className="contents">
-              Publicar trabajo gratis
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button variant="brand" fullWidth>
+              <Link href="/publicar" className="contents">
+                Publicar trabajo gratis
+              </Link>
+            </Button>
+            <Button variant="outline" fullWidth>
+              <Link href="/trabajos" className="contents">
+                Ver trabajos disponibles
+              </Link>
+            </Button>
+          </div>
         </section>
 
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-bold text-primary">¿Qué necesitás?</h2>
-          <CategoryGrid href={() => "/publicar"} />
+          <CategoryGrid href={(id) => `/trabajos?categoria=${id}`} />
         </section>
 
         <section className="flex flex-col gap-5">
