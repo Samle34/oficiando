@@ -20,7 +20,7 @@ export interface Job {
 
 // Columns returned in list views — omits client_phone for privacy
 const LIST_COLUMNS =
-  "id, title, category_id, province, city, status, applicants, posted_at, photos" as const;
+  "id, title, category_id, province, city, status, applicants, posted_at, photos, user_id, client_name" as const;
 
 // All columns for the detail view
 const DETAIL_COLUMNS = "*" as const;
@@ -86,6 +86,21 @@ export async function getJobById(id: number | string): Promise<Job | null> {
   }
 
   return data as Job;
+}
+
+/**
+ * Returns open jobs published by a specific user (for client profile page).
+ */
+export async function getJobsByUserId(userId: string): Promise<Job[]> {
+  const client = await createServerSupabaseClient();
+  const { data, error } = await client
+    .from("jobs")
+    .select(LIST_COLUMNS)
+    .eq("user_id", userId)
+    .eq("status", "abierto")
+    .order("posted_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Job[];
 }
 
 export interface CreateJobInput {

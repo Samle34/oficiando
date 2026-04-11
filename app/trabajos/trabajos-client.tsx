@@ -46,7 +46,7 @@ export default function TrabajosClient({
             ].join(" ")}
           />
 
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+          <div className="flex gap-4 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
             <button
               onClick={() => setActiveCategory(null)}
               className={[

@@ -1,6 +1,10 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getCategory } from "@/lib/categories";
 import CategoryTag from "./CategoryTag";
+import Avatar from "./Avatar";
 import type { Job } from "@/lib/jobs";
 
 function relativeTime(iso: string): string {
@@ -22,13 +26,17 @@ export default function JobCard({
   applicationStatus?: "pending" | "accepted";
 }) {
   const cat = getCategory(job.category_id);
+  const router = useRouter();
 
   return (
-    <Link
-      href={`/trabajos/${job.id}`}
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => router.push(`/trabajos/${job.id}`)}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/trabajos/${job.id}`)}
       className={[
         "group flex flex-col gap-3 bg-card rounded-lg border border-border px-4 py-4",
-        "transition-colors duration-150",
+        "transition-colors duration-150 cursor-pointer",
         "hover:border-[rgba(232,98,42,0.25)]",
         "border-l-[3px]",
       ].join(" ")}
@@ -96,6 +104,17 @@ export default function JobCard({
             : `${job.applicants} postulante${job.applicants === 1 ? "" : "s"}`}
         </p>
       )}
-    </Link>
+
+      {job.client_name && job.user_id && (
+        <Link
+          href={`/cliente/${job.user_id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center gap-2 pt-1 border-t border-border mt-1 hover:opacity-75 transition-opacity"
+        >
+          <Avatar name={job.client_name} size="sm" />
+          <span className="text-xs text-secondary truncate">{job.client_name}</span>
+        </Link>
+      )}
+    </div>
   );
 }
