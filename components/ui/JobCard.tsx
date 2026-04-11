@@ -14,7 +14,13 @@ function relativeTime(iso: string): string {
   return `hace ${days} d`;
 }
 
-export default function JobCard({ job }: { job: Job }) {
+export default function JobCard({
+  job,
+  applicationStatus,
+}: {
+  job: Job;
+  applicationStatus?: "pending" | "accepted";
+}) {
   const cat = getCategory(job.category_id);
 
   return (
@@ -65,7 +71,21 @@ export default function JobCard({ job }: { job: Job }) {
             />
             {job.status === "abierto" ? "Abierto" : "Cerrado"}
           </span>
-          <span className="text-xs text-tertiary">{relativeTime(job.posted_at)}</span>
+          {applicationStatus ? (
+            applicationStatus === "accepted" ? (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Aceptado ✓
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Pendiente
+              </span>
+            )
+          ) : (
+            <span className="text-xs text-tertiary">{relativeTime(job.posted_at)}</span>
+          )}
         </div>
       </div>
 

@@ -54,31 +54,35 @@ export default function TrabajadorClient({
       </div>
 
       {/* ── Bio ── */}
-      {profile.bio && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-sm font-bold text-primary">Sobre mí</h2>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-bold text-primary">Sobre mí</h2>
+        {profile.bio ? (
           <p className="text-sm text-secondary leading-relaxed">{profile.bio}</p>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-tertiary">Este trabajador no agregó una descripción todavía.</p>
+        )}
+      </div>
 
       {/* ── Categorías ── */}
-      {profile.categories.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold text-primary">Servicios que ofrezco</h2>
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold text-primary">Servicios que ofrece</h2>
+        {(profile.categories ?? []).length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {profile.categories.map((catId) => (
+            {(profile.categories ?? []).map((catId) => (
               <CategoryTag key={catId} categoryId={catId} size="md" />
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-tertiary">No especificó servicios todavía.</p>
+        )}
+      </div>
 
       {/* ── Zonas ── */}
-      {profile.work_zones.length > 0 && (
-        <div className="flex flex-col gap-3">
-          <h2 className="text-sm font-bold text-primary">Zonas donde trabajo</h2>
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold text-primary">Zonas donde trabaja</h2>
+        {(profile.work_zones ?? []).length > 0 ? (
           <div className="flex flex-wrap gap-2">
-            {profile.work_zones.map((zone) => (
+            {(profile.work_zones ?? []).map((zone) => (
               <span
                 key={zone}
                 className="px-3 py-1.5 rounded-full border border-border text-xs text-secondary bg-card"
@@ -87,8 +91,10 @@ export default function TrabajadorClient({
               </span>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-tertiary">No especificó zonas de trabajo todavía.</p>
+        )}
+      </div>
 
       {/* ── Portfolio ── */}
       <div className="flex flex-col gap-4">
