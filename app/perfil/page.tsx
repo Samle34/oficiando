@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase";
-import { getPortfolioByWorkerId } from "@/lib/profiles";
+import {
+  getPortfolioByWorkerId,
+  getRatingsByWorkerId,
+  getClientRatingsByClientId,
+} from "@/lib/profiles";
 import PerfilClient from "./perfil-client";
 
 export const metadata: Metadata = {
@@ -19,14 +23,17 @@ export default async function PerfilPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, phone, role, avatar_url, bio, categories, work_zones, rating, rating_count")
+    .select("full_name, phone, role, avatar_url, bio, categories, work_zones, rating, rating_count, client_rating, client_rating_count")
     .eq("id", user.id)
     .single();
 
   const role = (profile?.role ?? "client") as "client" | "worker";
-  const portfolioItems = role === "worker"
-    ? await getPortfolioByWorkerId(user.id)
-    : [];
+
+  const [portfolioItems, workerReviews, clientReviews] = await Promise.all([
+    role === "worker" ? getPortfolioByWorkerId(user.id) : Promise.resolve([]),
+    role === "worker" ? getRatingsByWorkerId(user.id) : Promise.resolve([]),
+    role === "client" ? getClientRatingsByClientId(user.id) : Promise.resolve([]),
+  ]);
 
   return (
     <PerfilClient
@@ -40,7 +47,11 @@ export default async function PerfilPage() {
       workZones={(profile?.work_zones as string[]) ?? []}
       rating={profile?.rating ?? 0}
       ratingCount={profile?.rating_count ?? 0}
+      clientRating={profile?.client_rating ?? 0}
+      clientRatingCount={profile?.client_rating_count ?? 0}
       portfolioItems={portfolioItems}
+      workerReviews={workerReviews}
+      clientReviews={clientReviews}
     />
   );
 }

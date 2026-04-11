@@ -92,7 +92,7 @@ export async function closeJob(jobId: number): Promise<CloseJobState> {
   return { status: "success" };
 }
 
-// ─── Worker search ────────────────────────────────────────────────
+// ─── Worker search (legacy, kept for reference) ───────────────────
 
 export type WorkerCandidate = {
   id: string;
@@ -100,18 +100,61 @@ export type WorkerCandidate = {
   avatar_url: string | null;
 };
 
-export async function searchWorkers(name: string): Promise<WorkerCandidate[]> {
-  if (!name || name.trim().length < 2) return [];
+// ─── Accepted workers for rating ─────────────────────────────────
 
+export type AcceptedWorkerForRating = {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+  alreadyRated: boolean;
+};
+
+export async function getAcceptedWorkersForJob(
+  jobId: number
+): Promise<AcceptedWorkerForRating[]> {
   const supabase = await createServerSupabaseClient();
-  const { data } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Verify ownership
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("id")
+    .eq("id", jobId)
+    .eq("user_id", user.id)
+    .single();
+  if (!job) return [];
+
+  // Accepted applications
+  const { data: apps } = await supabase
+    .from("applications")
+    .select("worker_id")
+    .eq("job_id", jobId)
+    .eq("status", "accepted");
+  if (!apps || apps.length === 0) return [];
+
+  const workerIds = apps.map((a) => a.worker_id as string);
+
+  // Profiles of those workers
+  const { data: profiles } = await supabase
     .from("profiles")
     .select("id, full_name, avatar_url")
-    .eq("role", "worker")
-    .ilike("full_name", `%${name.trim()}%`)
-    .limit(5);
+    .in("id", workerIds);
 
-  return (data ?? []) as WorkerCandidate[];
+  // Existing ratings for this job
+  const { data: existingRatings } = await supabase
+    .from("ratings")
+    .select("worker_id")
+    .eq("job_id", jobId);
+
+  const ratedSet = new Set((existingRatings ?? []).map((r) => r.worker_id as string));
+
+  return (profiles ?? []).map((p) => ({
+    id: p.id as string,
+    full_name: (p.full_name ?? "Trabajador") as string,
+    avatar_url: p.avatar_url as string | null,
+    alreadyRated: ratedSet.has(p.id as string),
+  }));
 }
 
 // ─── Rating ───────────────────────────────────────────────────────
@@ -256,6 +299,68 @@ export async function applyToJob(jobId: number, message?: string): Promise<Apply
   revalidatePath(`/trabajos/${jobId}`);
   revalidatePath("/mis-trabajos");
 
+  return { status: "success" };
+}
+
+// ─── Rate client (worker → client) ───────────────────────────────
+
+export type RateClientState =
+  | { status: "success" }
+  | { status: "error"; message: string };
+
+export async function rateClient(input: {
+  jobId: number;
+  clientId: string;
+  score: number;
+  comment?: string;
+}): Promise<RateClientState> {
+  if (input.score < 1 || input.score > 5) {
+    return { status: "error", message: "La puntuación debe ser entre 1 y 5." };
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { status: "error", message: "No autenticado." };
+
+  // Verify this worker was accepted on this job
+  const { data: app } = await supabase
+    .from("applications")
+    .select("status")
+    .eq("job_id", input.jobId)
+    .eq("worker_id", user.id)
+    .single();
+
+  if (!app || app.status !== "accepted") {
+    return { status: "error", message: "Solo podés calificar clientes de trabajos en los que fuiste aceptado." };
+  }
+
+  // Verify job is closed
+  const { data: job } = await supabase
+    .from("jobs")
+    .select("status")
+    .eq("id", input.jobId)
+    .single();
+
+  if (!job || job.status !== "cerrado") {
+    return { status: "error", message: "Solo podés calificar en trabajos cerrados." };
+  }
+
+  const { error } = await supabase.from("client_ratings").insert({
+    job_id: input.jobId,
+    worker_id: user.id,
+    client_id: input.clientId,
+    score: input.score,
+    comment: input.comment?.trim() || null,
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { status: "error", message: "Ya calificaste al cliente de este trabajo." };
+    }
+    return { status: "error", message: "No se pudo guardar la calificación." };
+  }
+
+  revalidatePath("/mis-trabajos");
   return { status: "success" };
 }
 
