@@ -6,11 +6,10 @@ import StarRating from "@/components/ui/StarRating";
 
 interface Props {
   jobId: number;
-  clientId: string;
   clientName: string;
 }
 
-export default function RateClientInline({ jobId, clientId, clientName }: Props) {
+export default function RateClientInline({ jobId, clientName }: Props) {
   const [open, setOpen] = useState(false);
   const [score, setScore] = useState(0);
   const [comment, setComment] = useState("");
@@ -22,7 +21,7 @@ export default function RateClientInline({ jobId, clientId, clientName }: Props)
     if (score === 0) return;
     setSubmitting(true);
     setError(null);
-    const result = await rateClient({ jobId, clientId, score, comment });
+    const result = await rateClient({ jobId, score, comment });
     setSubmitting(false);
     if (result.status === "error") {
       setError(result.message);

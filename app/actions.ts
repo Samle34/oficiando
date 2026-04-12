@@ -55,7 +55,8 @@ export async function publicarTrabajo(
     revalidatePath("/trabajos");
 
     return { status: "success", jobId: job.id };
-  } catch {
+  } catch (error) {
+    console.error("[publicarTrabajo] insert failed:", error);
     return {
       status: "error",
       message: "No se pudo publicar el trabajo. Intentá de nuevo.",
@@ -290,11 +291,32 @@ export async function applyToJob(jobId: number, message?: string): Promise<Apply
     return { status: "error", message: "Solo los trabajadores pueden postularse." };
   }
 
-  const { error } = await supabase
+  // Read first so a second "Quiero este trabajo" tap never downgrades an
+  // already-accepted application back to pending.
+  const { data: existing } = await supabase
     .from("applications")
-    .upsert({ job_id: jobId, worker_id: user.id, message: message?.trim() || null, status: "pending" });
+    .select("status, message")
+    .eq("job_id", jobId)
+    .eq("worker_id", user.id)
+    .maybeSingle();
 
-  if (error) return { status: "error", message: "No se pudo guardar la postulación." };
+  if (existing) {
+    // Already applied — only refresh the message, keep status untouched.
+    const trimmed = message?.trim() || null;
+    if (trimmed !== null && trimmed !== existing.message) {
+      const { error } = await supabase
+        .from("applications")
+        .update({ message: trimmed })
+        .eq("job_id", jobId)
+        .eq("worker_id", user.id);
+      if (error) return { status: "error", message: "No se pudo actualizar la postulación." };
+    }
+  } else {
+    const { error } = await supabase
+      .from("applications")
+      .insert({ job_id: jobId, worker_id: user.id, message: message?.trim() || null });
+    if (error) return { status: "error", message: "No se pudo guardar la postulación." };
+  }
 
   revalidatePath(`/trabajos/${jobId}`);
   revalidatePath("/mis-trabajos");
@@ -310,7 +332,6 @@ export type RateClientState =
 
 export async function rateClient(input: {
   jobId: number;
-  clientId: string;
   score: number;
   comment?: string;
 }): Promise<RateClientState> {
@@ -334,21 +355,24 @@ export async function rateClient(input: {
     return { status: "error", message: "Solo podés calificar clientes de trabajos en los que fuiste aceptado." };
   }
 
-  // Verify job is closed
+  // Resolve client_id server-side from the job row — never trust client input
   const { data: job } = await supabase
     .from("jobs")
-    .select("status")
+    .select("status, user_id")
     .eq("id", input.jobId)
     .single();
 
   if (!job || job.status !== "cerrado") {
     return { status: "error", message: "Solo podés calificar en trabajos cerrados." };
   }
+  if (!job.user_id) {
+    return { status: "error", message: "Este trabajo no tiene un cliente registrado." };
+  }
 
   const { error } = await supabase.from("client_ratings").insert({
     job_id: input.jobId,
     worker_id: user.id,
-    client_id: input.clientId,
+    client_id: job.user_id,
     score: input.score,
     comment: input.comment?.trim() || null,
   });

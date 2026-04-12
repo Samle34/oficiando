@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import JobCard from "@/components/ui/JobCard";
 import RateClientInline from "./rate-client-inline";
 import { createServerSupabaseClient } from "@/lib/supabase";
+import { waUrl as buildWaUrl } from "@/lib/whatsapp";
 import type { Job } from "@/lib/jobs";
 
 export const metadata: Metadata = {
@@ -81,15 +82,13 @@ export default async function MisTrabajosPage() {
   }
 
   function waUrl(row: AppRow): string | null {
-    const phone = row.jobs?.client_phone;
-    if (!phone) return null;
     const jobTitle = row.jobs?.title ?? "";
     const clientName = row.jobs?.client_name ?? "";
     const defaultMsg = clientName
       ? `Hola ${clientName.split(" ")[0]}, vi tu publicación en Oficiando sobre "${jobTitle}". ¿Seguís buscando a alguien?`
       : `Hola, vi tu publicación en Oficiando sobre "${jobTitle}". ¿Seguís buscando a alguien?`;
     const msg = row.message ?? defaultMsg;
-    return `https://wa.me/54${phone}?text=${encodeURIComponent(msg)}`;
+    return buildWaUrl(row.jobs?.client_phone, msg);
   }
 
   return (
@@ -156,7 +155,6 @@ export default async function MisTrabajosPage() {
                 {canRateClient && (
                   <RateClientInline
                     jobId={job.id}
-                    clientId={clientId!}
                     clientName={row.jobs.client_name ?? "el cliente"}
                   />
                 )}

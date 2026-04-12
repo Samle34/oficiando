@@ -9,6 +9,7 @@ import StarRating from "@/components/ui/StarRating";
 import { getCategory } from "@/lib/categories";
 import { applyToJob, acceptApplication } from "@/app/actions";
 import type { Job } from "@/lib/jobs";
+import { waUrl as buildWaUrl } from "@/lib/whatsapp";
 import type { Applicant } from "./page";
 
 function relativeTime(iso: string): string {
@@ -84,9 +85,7 @@ export default function DetalleClient({
 
   // WhatsApp URL uses stored message (if accepted) or current textarea value
   const waMsg = applicationStatus === "accepted" ? (applicationMessage ?? defaultMsg) : mensaje;
-  const waUrl = job.client_phone
-    ? `https://wa.me/54${job.client_phone}?text=${encodeURIComponent(waMsg)}`
-    : null;
+  const waUrl = buildWaUrl(job.client_phone, waMsg);
 
   function handleApply() {
     startTransition(async () => {
